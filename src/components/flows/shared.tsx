@@ -221,7 +221,7 @@ export interface NodeColors {
 }
 
 export function nodeColors(type: NodeType): NodeColors {
-  const t = NODE_HUE[type];
+  const t = NODE_HUE[type] || { l: 0.55, c: 0.01, h: 260 }; // fallback to neutral grey
   const solid = `oklch(${t.l} ${t.c} ${t.h})`;
   return {
     solid,
@@ -257,7 +257,7 @@ export function NodeIconChip({
   iconSize?: number;
   className?: string;
 }) {
-  const meta = NODE_META[type];
+  const meta = NODE_META[type] || NODE_META.end;
   const c = nodeColors(type);
   const Icon = meta.icon;
   return (

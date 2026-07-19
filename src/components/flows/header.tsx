@@ -22,6 +22,7 @@
  * /flows/[id]/runs) — those don't belong in the hook.
  */
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -33,6 +34,7 @@ import {
   Save,
   Trash2,
   Workflow,
+  Code,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -41,9 +43,11 @@ import {
   useFlowEditor,
   type BuilderState,
 } from "./flow-editor-state";
+import { CodeEditorDialog } from "./code-editor-dialog";
 
 export function EditorHeader() {
   const router = useRouter();
+  const [codeOpen, setCodeOpen] = useState(false);
   const {
     flow,
     state,
@@ -58,8 +62,9 @@ export function EditorHeader() {
   } = useFlowEditor();
 
   return (
-    <div className="flex flex-col gap-1.5 px-6 pt-5">
-      <div className="flex flex-wrap items-center gap-3">
+    <>
+      <div className="flex flex-col gap-1.5 px-6 pt-5">
+        <div className="flex flex-wrap items-center gap-3">
         {/* ---- left: back · icon · name · status · edited ---- */}
         <button
           type="button"
@@ -95,6 +100,14 @@ export function EditorHeader() {
 
         {/* ---- right: runs · delete · activate · save ---- */}
         <div className="ml-auto flex flex-wrap items-center gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCodeOpen(true)}
+          >
+            <Code className="h-3.5 w-3.5" />
+            Code
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -171,6 +184,8 @@ export function EditorHeader() {
         className="w-full max-w-[78ch] rounded-md border border-transparent bg-transparent px-2 py-1 text-[13px] text-muted-foreground outline-none transition-colors placeholder:text-muted-foreground/60 hover:bg-muted/50 focus:border-primary focus:bg-transparent focus:text-foreground"
       />
     </div>
+      <CodeEditorDialog open={codeOpen} onOpenChange={setCodeOpen} />
+    </>
   );
 }
 

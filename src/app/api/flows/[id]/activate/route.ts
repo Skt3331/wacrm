@@ -60,7 +60,7 @@ export async function POST(
     .eq('id', id)
     .maybeSingle()
   if (!existing) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    return NextResponse.json({ error: 'Not found in existing check' }, { status: 500 })
   }
 
   const admin = supabaseAdmin()
@@ -79,7 +79,7 @@ export async function POST(
         .eq('flow_id', id),
     ])
     if (!flow) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Not found in admin flow check' }, { status: 500 })
     }
     const issues = validateFlowForActivation(
       flow as {

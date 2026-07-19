@@ -136,7 +136,7 @@ function slotColor(nodeType: NodeType, slotId: string, fallback: string) {
 function FlowNodeCard({ data, selected }: NodeProps) {
   const t = useTranslations('Flows.builder');
   const { node, isEntry, isFlashed } = data as NodeData;
-  const meta = NODE_META[node.node_type];
+  const meta = NODE_META[node.node_type] || NODE_META.end;
   const c = nodeColors(node.node_type);
   const tSummary = useTranslations('Flows.summary');
   const summary = summarizeNode(node, tSummary);
@@ -195,7 +195,7 @@ function FlowNodeCard({ data, selected }: NodeProps) {
           className="truncate text-[10.5px] font-semibold tracking-wider uppercase"
           style={{ color: c.text }}
         >
-          {t(`nodes.${node.node_type}.label`)}
+          {t(`nodes.${NODE_META[node.node_type] ? node.node_type : 'end'}.label`)}
         </span>
         {isEntry && (
           <span className="border-border text-muted-foreground ml-auto rounded border px-1.5 py-0.5 text-[8.5px] font-bold tracking-[0.1em] uppercase">
@@ -624,7 +624,7 @@ function NodeEditSheet({
       </Sheet>
     );
   }
-  const meta = NODE_META[node.node_type];
+  const meta = NODE_META[node.node_type] || NODE_META.end;
   const c = nodeColors(node.node_type);
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
@@ -636,7 +636,7 @@ function NodeEditSheet({
           <NodeIconChip type={node.node_type} size={36} iconSize={18} />
           <div className="min-w-0 flex-1">
             <SheetTitle className="flex items-center gap-2 text-[11px] font-semibold tracking-wider uppercase">
-              <span style={{ color: c.text }}>{t(`nodes.${node.node_type}.label`)}</span>
+              <span style={{ color: c.text }}>{t(`nodes.${NODE_META[node.node_type] ? node.node_type : 'end'}.label`)}</span>
               {isEntry && (
                 <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-semibold tracking-wider text-emerald-300 uppercase">
                   {t('badgeEntry')}

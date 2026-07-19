@@ -118,13 +118,16 @@ export function NodeKeySelect({
       <SelectContent>
         <SelectItem value="__none__">{t("none")}</SelectItem>
         {options.map((n) => {
-          const Icon = NODE_META[n.node_type].icon;
+          const meta = NODE_META[n.node_type];
+          const Icon = meta?.icon;
           return (
             <SelectItem key={n.node_key} value={n.node_key}>
               <span className="inline-flex items-center gap-1.5">
-                <Icon
-                  className={cn("h-3 w-3", NODE_META[n.node_type].color)}
-                />
+                {Icon && (
+                  <Icon
+                    className={cn("h-3 w-3", meta.color)}
+                  />
+                )}
                 {n.node_key}
               </span>
             </SelectItem>

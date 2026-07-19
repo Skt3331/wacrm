@@ -402,7 +402,7 @@ function NodeCard({
   onSetEntry: () => void;
   t: ReturnType<typeof useTranslations>;
 }) {
-  const meta = NODE_META[node.node_type];
+  const meta = NODE_META[node.node_type] || NODE_META.end;
   const c = nodeColors(node.node_type);
   const hasError = issues.some((i) => i.severity === 'error');
   const tSummary = useTranslations('Flows.summary');
@@ -437,7 +437,7 @@ function NodeCard({
               className="truncate text-[11px] font-semibold tracking-wider uppercase"
               style={{ color: c.text }}
             >
-              {t(`nodes.${node.node_type}.label`)}
+              {t(`nodes.${NODE_META[node.node_type] ? node.node_type : 'end'}.label`)}
             </span>
             <code className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-[10px]">
               {node.node_key}
