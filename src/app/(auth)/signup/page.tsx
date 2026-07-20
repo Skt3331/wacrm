@@ -65,8 +65,8 @@ function SignupPageInner() {
     // verifying. Without a token, Supabase uses its default
     // redirect (the app root).
     const emailRedirectTo = inviteToken
-      ? `${window.location.origin}/join/${encodeURIComponent(inviteToken)}`
-      : undefined;
+      ? `${window.location.origin}/auth/callback?next=/join/${encodeURIComponent(inviteToken)}`
+      : `${window.location.origin}/auth/callback?next=/dashboard`;
 
     const { error } = await supabase.auth.signUp({
       email,
