@@ -57,7 +57,7 @@ export function useTasks(contactId?: string) {
       .insert({
         ...task,
         account_id: accountId,
-        user_id: profile.user_id,
+        user_id: profile.id,
         contact_id: task.contact_id || contactId,
       })
       .select()

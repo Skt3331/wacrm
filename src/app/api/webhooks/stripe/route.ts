@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-01-27.acacia',
+  apiVersion: '2026-06-24.dahlia',
 });
 
 // We need an admin client to bypass RLS for webhook updates
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted':
-        const subscription = event.data.object as Stripe.Subscription;
+        const subscription = event.data.object as any;
         
         // Fetch user from customer mapping
         const { data: customerData } = await supabaseAdmin

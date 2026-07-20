@@ -44,6 +44,7 @@ interface AccountSummary {
   /** Default deal currency (ISO-4217). NOT NULL DEFAULT 'USD' in the
    *  DB (migration 021); narrowed to DEFAULT_CURRENCY when absent. */
   default_currency: string;
+  onboarding_completed?: boolean;
 }
 
 interface AuthContextValue {

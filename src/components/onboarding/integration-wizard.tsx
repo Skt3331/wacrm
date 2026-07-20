@@ -49,7 +49,7 @@ export function IntegrationWizard({ open, onComplete }: IntegrationWizardProps) 
         const { error: waError } = await supabase
           .from('whatsapp_config')
           .upsert({
-            user_id: profile.user_id,
+            user_id: profile.id,
             phone_number_id: waPhoneNumberId,
             waba_id: waWabaId || null,
             access_token: waAccessToken,
