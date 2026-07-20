@@ -57,6 +57,7 @@ import { CustomFieldsManager } from '@/components/contacts/custom-fields-manager
 import { useCan } from '@/hooks/use-can';
 import { GatedButton } from '@/components/ui/gated-button';
 import { useTranslations } from 'next-intl';
+import { useBillingUsage } from '@/hooks/use-billing-usage';
 
 const PAGE_SIZE = 25;
 
@@ -77,6 +78,10 @@ export default function ContactsPage() {
   const [totalCount, setTotalCount] = useState(0);
   // Tag filter — contacts shown must have ANY of these tags (OR).
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  
+  // Quota enforcement
+  const { usage } = useBillingUsage();
+  const isOverLimit = usage?.maxContacts !== 'unlimited' && usage !== null && usage.contactsCount >= usage.maxContacts;
 
   // Modals
   const [formOpen, setFormOpen] = useState(false);
@@ -360,25 +365,27 @@ export default function ContactsPage() {
               {t('customFieldsBtn')}
             </Button>
           )}
-          <GatedButton
-            variant="outline"
-            canAct={canEdit}
-            gateReason="add or import contacts"
-            onClick={() => setImportOpen(true)}
-            className="border-border text-muted-foreground hover:bg-muted"
-          >
-            <Upload className="size-4" />
-            {t('importBtn')}
-          </GatedButton>
-          <GatedButton
-            canAct={canEdit}
-            gateReason="add or import contacts"
-            onClick={openAddForm}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
-            <Plus className="size-4" />
-            {t('addContactBtn')}
-          </GatedButton>
+          <div className="flex items-center gap-2" title={isOverLimit ? 'Contact limit reached on your current plan' : undefined}>
+            <GatedButton
+              variant="outline"
+              canAct={canEdit && !isOverLimit}
+              gateReason={isOverLimit ? 'Upgrade plan to add more contacts' : "add or import contacts"}
+              onClick={() => setImportOpen(true)}
+              className="border-border text-muted-foreground hover:bg-muted"
+            >
+              <Upload className="size-4" />
+              {t('importBtn')}
+            </GatedButton>
+            <GatedButton
+              canAct={canEdit && !isOverLimit}
+              gateReason={isOverLimit ? 'Upgrade plan to add more contacts' : "add or import contacts"}
+              onClick={openAddForm}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              <Plus className="size-4" />
+              {t('addContactBtn')}
+            </GatedButton>
+          </div>
         </div>
       </div>
 
@@ -572,8 +579,8 @@ export default function ContactsPage() {
                     </p>
                     {!hasActiveFilters && (
                       <GatedButton
-                        canAct={canEdit}
-                        gateReason="add or import contacts"
+                        canAct={canEdit && !isOverLimit}
+                        gateReason={isOverLimit ? 'Upgrade plan to add contacts' : "add or import contacts"}
                         variant="outline"
                         size="sm"
                         onClick={openAddForm}
