@@ -91,10 +91,14 @@ export function WhatsAppConfig() {
   const [registrationProbe, setRegistrationProbe] =
     useState<RegistrationProbe | null>(null);
 
-  const webhookUrl =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/api/whatsapp/webhook/${accountId || '{account_id}'}`
-      : '';
+  const [origin, setOrigin] = useState('');
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+  const webhookUrl = origin
+    ? `${origin}/api/whatsapp/webhook/${accountId || '{account_id}'}`
+    : '';
 
   const fetchConfig = useCallback(async (acctId: string) => {
     setLoading(true);
