@@ -31,6 +31,7 @@ export function IntegrationWizard({ open, onComplete }: IntegrationWizardProps) 
   const [waPhoneNumberId, setWaPhoneNumberId] = useState('');
   const [waWabaId, setWaWabaId] = useState('');
   const [waAccessToken, setWaAccessToken] = useState('');
+  const [waMetaAppSecret, setWaMetaAppSecret] = useState('');
   const [openAiKey, setOpenAiKey] = useState('');
 
   const handleNext = async () => {
@@ -45,18 +46,23 @@ export function IntegrationWizard({ open, onComplete }: IntegrationWizardProps) 
 
     try {
       // 1. Save WhatsApp Config if provided
-      if (waPhoneNumberId && waAccessToken) {
-        const { error: waError } = await supabase
-          .from('whatsapp_config')
-          .upsert({
-            user_id: profile.id,
+      if (waPhoneNumberId && waAccessToken && waMetaAppSecret) {
+        // We POST to the API rather than inserting directly so that
+        // the access token and meta app secret are encrypted with ENCRYPTION_KEY.
+        const res = await fetch('/api/whatsapp/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
             phone_number_id: waPhoneNumberId,
             waba_id: waWabaId || null,
             access_token: waAccessToken,
-            status: 'connected',
-          }, { onConflict: 'user_id' });
-          
-        if (waError) throw waError;
+            meta_app_secret: waMetaAppSecret,
+          }),
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Failed to save WhatsApp config');
+        }
       }
 
       // 2. Mark Onboarding as Completed
@@ -73,9 +79,10 @@ export function IntegrationWizard({ open, onComplete }: IntegrationWizardProps) 
       toast.success('Onboarding complete!');
       onComplete();
       
-    } catch (err: any) {
+    } catch (err) {
       console.error('Onboarding Error:', err);
-      toast.error(err.message || 'Failed to save integrations');
+      const msg = err instanceof Error ? err.message : 'Failed to save integrations';
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -141,6 +148,16 @@ export function IntegrationWizard({ open, onComplete }: IntegrationWizardProps) 
                   onChange={(e) => setWaAccessToken(e.target.value)}
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="appSecret">Meta App Secret <span className="text-destructive">*</span></Label>
+                <Input
+                  id="appSecret"
+                  type="password"
+                  placeholder="Enter Meta App Secret"
+                  value={waMetaAppSecret}
+                  onChange={(e) => setWaMetaAppSecret(e.target.value)}
+                />
+              </div>
             </div>
           )}
 
@@ -173,7 +190,7 @@ export function IntegrationWizard({ open, onComplete }: IntegrationWizardProps) 
               Back
             </Button>
           )}
-          <Button onClick={handleNext} disabled={loading || (step === 2 && (!waPhoneNumberId || !waAccessToken))}>
+          <Button onClick={handleNext} disabled={loading || (step === 2 && (!waPhoneNumberId || !waAccessToken || !waMetaAppSecret))}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {step === 3 ? "Complete Setup" : "Next"}
             {step < 3 && <ArrowRight className="ml-2 h-4 w-4" />}

@@ -57,7 +57,6 @@ import { CustomFieldsManager } from '@/components/contacts/custom-fields-manager
 import { useCan } from '@/hooks/use-can';
 import { GatedButton } from '@/components/ui/gated-button';
 import { useTranslations } from 'next-intl';
-import { useBillingUsage } from '@/hooks/use-billing-usage';
 
 const PAGE_SIZE = 25;
 
@@ -79,9 +78,8 @@ export default function ContactsPage() {
   // Tag filter — contacts shown must have ANY of these tags (OR).
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   
-  // Quota enforcement
-  const { usage } = useBillingUsage();
-  const isOverLimit = usage?.maxContacts !== 'unlimited' && usage !== null && usage.contactsCount >= usage.maxContacts;
+  // Quota enforcement removed
+  const isOverLimit = false;
 
   // Modals
   const [formOpen, setFormOpen] = useState(false);

@@ -66,9 +66,11 @@ export function WhatsAppConfig() {
   const [phoneNumberId, setPhoneNumberId] = useState('');
   const [wabaId, setWabaId] = useState('');
   const [accessToken, setAccessToken] = useState('');
+  const [metaAppSecret, setMetaAppSecret] = useState('');
   const [verifyToken, setVerifyToken] = useState('');
   const [pin, setPin] = useState('');
   const [tokenEdited, setTokenEdited] = useState(false);
+  const [secretEdited, setSecretEdited] = useState(false);
 
   // True once /register has succeeded on Meta's side (timestamp set
   // in the row). When false, the saved config is metadata-only and
@@ -91,7 +93,7 @@ export function WhatsAppConfig() {
 
   const webhookUrl =
     typeof window !== 'undefined'
-      ? `${window.location.origin}/api/whatsapp/webhook`
+      ? `${window.location.origin}/api/whatsapp/webhook/${accountId || '{account_id}'}`
       : '';
 
   const fetchConfig = useCallback(async (acctId: string) => {
@@ -118,17 +120,21 @@ export function WhatsAppConfig() {
         setPhoneNumberId(data.phone_number_id || '');
         setWabaId(data.waba_id || '');
         setAccessToken(MASKED_TOKEN);
+        setMetaAppSecret(data.meta_app_secret ? MASKED_TOKEN : '');
         setVerifyToken('');
         setPin('');
         setTokenEdited(false);
+        setSecretEdited(false);
       } else {
         setConfig(null);
         setPhoneNumberId('');
         setWabaId('');
         setAccessToken('');
+        setMetaAppSecret('');
         setVerifyToken('');
         setPin('');
         setTokenEdited(false);
+        setSecretEdited(false);
       }
       // Clear any stale probe result when reloading the row.
       setRegistrationProbe(null);
@@ -180,7 +186,7 @@ export function WhatsAppConfig() {
     if (loadedAccountIdRef.current === accountId) return;
     loadedAccountIdRef.current = accountId;
     fetchConfig(accountId);
-  }, [authLoading, profileLoading, user?.id, accountId, fetchConfig]);
+  }, [authLoading, profileLoading, user, accountId, fetchConfig]);
 
   async function handleSave() {
     if (!phoneNumberId.trim()) {
@@ -189,6 +195,10 @@ export function WhatsAppConfig() {
     }
     if (!config && (!accessToken.trim() || !tokenEdited)) {
       toast.error('Access Token is required for initial setup');
+      return;
+    }
+    if (!config && (!metaAppSecret.trim() || !secretEdited)) {
+      toast.error('Meta App Secret is required for initial setup');
       return;
     }
 
@@ -211,12 +221,16 @@ export function WhatsAppConfig() {
 
       if (tokenEdited && accessToken !== MASKED_TOKEN && accessToken.trim()) {
         payload.access_token = accessToken.trim();
-      } else if (config) {
-        // Existing config — reuse stored encrypted token by decrypting on the
-        // server. But our POST handler requires an access_token to verify
-        // with Meta. If the user didn't change the token, we need to signal
-        // that. Simplest: require token re-entry if they're updating.
-        toast.error('Please re-enter the Access Token to save changes');
+      } else if (config && tokenEdited && !accessToken.trim()) {
+        toast.error('Access Token cannot be empty if modified');
+        setSaving(false);
+        return;
+      }
+      
+      if (secretEdited && metaAppSecret !== MASKED_TOKEN && metaAppSecret.trim()) {
+        payload.meta_app_secret = metaAppSecret.trim();
+      } else if (config && secretEdited && !metaAppSecret.trim()) {
+        toast.error('Meta App Secret cannot be empty if modified');
         setSaving(false);
         return;
       }
@@ -611,6 +625,40 @@ export function WhatsAppConfig() {
                   </button>
                 </div>
                 {config && !tokenEdited && (
+                  <p className="text-xs text-muted-foreground">
+                    {t('tokenHidden')}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Meta App Secret</Label>
+                <div className="relative">
+                  <Input
+                    type={showToken ? 'text' : 'password'}
+                    placeholder="Enter Meta App Secret (found in App Settings -> Basic)"
+                    value={metaAppSecret}
+                    onChange={(e) => {
+                      setMetaAppSecret(e.target.value);
+                      setSecretEdited(true);
+                    }}
+                    onFocus={() => {
+                      if (metaAppSecret === MASKED_TOKEN) {
+                        setMetaAppSecret('');
+                        setSecretEdited(true);
+                      }
+                    }}
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowToken(!showToken)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showToken ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+                {config && !secretEdited && (
                   <p className="text-xs text-muted-foreground">
                     {t('tokenHidden')}
                   </p>

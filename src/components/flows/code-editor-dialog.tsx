@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Code, Copy, Check } from "lucide-react";
 import { NODE_META } from "./shared";
@@ -26,14 +26,16 @@ export function CodeEditorDialog({ open, onOpenChange }: CodeEditorDialogProps) 
   const { state, setState } = useFlowEditor();
   const [json, setJson] = useState("");
   const [copied, setCopied] = useState(false);
+  const [prevOpen, setPrevOpen] = useState(open);
 
   // Sync state to local JSON string when opened.
-  useEffect(() => {
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setJson(JSON.stringify(state, null, 2));
       setCopied(false);
     }
-  }, [open, state]);
+  }
 
   const handleApply = () => {
     try {
@@ -41,14 +43,14 @@ export function CodeEditorDialog({ open, onOpenChange }: CodeEditorDialogProps) 
       
       // Sanitize the imported payload so we never inject invalid node types
       if (Array.isArray(parsed.nodes)) {
-        parsed.nodes = parsed.nodes.filter((n: any) => n && n.node_type && NODE_META[n.node_type as keyof typeof NODE_META]);
+        parsed.nodes = parsed.nodes.filter((n: Record<string, unknown>) => n && n.node_type && typeof n.node_type === 'string' && NODE_META[n.node_type as keyof typeof NODE_META]);
       }
 
       // Let the engine validate it on the next save attempt
       setState(parsed);
       toast.success("Flow updated from JSON");
       onOpenChange(false);
-    } catch (err) {
+    } catch {
       toast.error("Invalid JSON format");
     }
   };

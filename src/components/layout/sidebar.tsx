@@ -301,13 +301,27 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
                     href="/admin"
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors lg:py-2",
-                      pathname.startsWith("/admin")
+                      pathname === "/admin"
                         ? "bg-amber-500/10 text-amber-500"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground",
                     )}
                   >
                     <Shield className="h-4 w-4" />
                     Admin
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/admin/content"
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors lg:py-2",
+                      pathname.startsWith("/admin/content")
+                        ? "bg-whatsapp/10 text-whatsapp"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    )}
+                  >
+                    <Bot className="h-4 w-4" />
+                    Content CMS
                   </Link>
                 </li>
               </ul>

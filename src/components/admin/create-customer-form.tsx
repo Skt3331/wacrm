@@ -34,8 +34,8 @@ export function CreateCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
       toast.success('Customer created successfully with lifetime access!');
       if (onSuccess) onSuccess();
       (e.target as HTMLFormElement).reset();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to create customer');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create customer');
     } finally {
       setLoading(false);
     }

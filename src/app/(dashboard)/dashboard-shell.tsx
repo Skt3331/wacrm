@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import { useSubscription } from "@/hooks/use-subscription";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { PresenceHeartbeat } from "@/components/presence/presence-heartbeat";
@@ -28,9 +27,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, router]);
 
-  const { hasAccess, loading: subLoading } = useSubscription();
-
-  if (loading || subLoading) {
+  if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
@@ -42,11 +39,6 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) return null;
-
-  if (hasAccess === false) {
-    router.push('/pricing');
-    return null;
-  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-transparent">
@@ -61,7 +53,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
       </div>
       
       {/* Show onboarding wizard if they haven't completed it */}
-      {user && !loading && !subLoading && hasAccess && (
+      {user && !loading && (
         <IntegrationWizard 
           open={account?.onboarding_completed === false} 
           onComplete={() => {

@@ -50,10 +50,10 @@ export async function generateGemini(args: ProviderArgs): Promise<ProviderResult
     })
 
     return { text, usage }
-  } catch (err: any) {
+  } catch (err) {
     if (err instanceof AiError) throw err
     
-    const msg = err.message || ''
+    const msg = err instanceof Error ? err.message : String(err)
     if (msg.includes('API key not valid')) {
       throw new AiError('Gemini rejected the API key.', { code: 'invalid_key', status: 401 })
     }

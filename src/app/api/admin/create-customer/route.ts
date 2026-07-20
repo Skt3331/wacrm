@@ -85,7 +85,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true, userId: newUserId });
-  } catch (err: any) {
+  } catch (err) {
     console.error(err);
     return new NextResponse('Internal Error', { status: 500 });
   }

@@ -87,7 +87,7 @@ export async function GET() {
 
     const { data: config, error: configError } = await supabase
       .from('whatsapp_config')
-      .select('phone_number_id, access_token, status')
+      .select('phone_number_id, access_token, meta_app_secret, status')
       .eq('account_id', accountId)
       .maybeSingle()
 
@@ -185,11 +185,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { phone_number_id, waba_id, access_token, verify_token, pin } = body
+    const { phone_number_id, waba_id, access_token, meta_app_secret, verify_token, pin } = body
 
-    if (!access_token || !phone_number_id) {
+    if (!access_token || !phone_number_id || !meta_app_secret) {
       return NextResponse.json(
-        { error: 'access_token and phone_number_id are required' },
+        { error: 'access_token, phone_number_id, and meta_app_secret are required' },
         { status: 400 }
       )
     }
@@ -253,9 +253,11 @@ export async function POST(request: Request) {
 
     // Encrypt sensitive tokens before storing
     let encryptedAccessToken: string
+    let encryptedMetaAppSecret: string
     let encryptedVerifyToken: string | null
     try {
       encryptedAccessToken = encrypt(access_token)
+      encryptedMetaAppSecret = encrypt(meta_app_secret)
       encryptedVerifyToken = verify_token ? encrypt(verify_token) : null
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown encryption error'
@@ -357,6 +359,7 @@ export async function POST(request: Request) {
       phone_number_id,
       waba_id: waba_id || null,
       access_token: encryptedAccessToken,
+      meta_app_secret: encryptedMetaAppSecret,
       verify_token: encryptedVerifyToken,
       status: registrationError ? 'disconnected' : 'connected',
       connected_at: registrationError ? null : new Date().toISOString(),

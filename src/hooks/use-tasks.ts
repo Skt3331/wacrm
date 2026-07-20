@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from './use-auth';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
 
 export interface Task {
   id: string;
@@ -23,7 +22,6 @@ export function useTasks(contactId?: string) {
   const { accountId, profile } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const t = useTranslations('Tasks'); // Optional: fallback to generic text if not found
 
   const fetchTasks = useCallback(async () => {
     if (!accountId) return;

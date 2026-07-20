@@ -87,8 +87,12 @@ interface WhatsAppWebhookEntry {
 }
 
 // GET - Webhook verification
-export async function GET(request: Request) {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ accountId: string }> }
+) {
   try {
+    const { accountId } = await params
     const { searchParams } = new URL(request.url)
     const mode = searchParams.get('hub.mode')
     const challenge = searchParams.get('hub.challenge')
@@ -101,44 +105,54 @@ export async function GET(request: Request) {
       )
     }
 
-    // Fetch all whatsapp configs to check verify tokens
-    const { data: configs, error: configError } = await supabaseAdmin()
+    // Fetch the whatsapp config for this account
+    const { data: config, error: configError } = await supabaseAdmin()
       .from('whatsapp_config')
       .select('id, verify_token')
+      .eq('account_id', accountId)
+      .maybeSingle()
 
-    if (configError || !configs) {
-      console.error('Error fetching configs for verification:', configError)
+    if (configError || !config) {
+      console.error('Error fetching config for verification:', configError)
       return NextResponse.json(
         { error: 'Verification failed' },
         { status: 403 }
       )
     }
 
-    // Check if any config's verify_token matches. Also collect the
-    // matching row so we can opportunistically upgrade its token to
-    // GCM if it was still in the legacy CBC format.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let matchedConfig: any = null
-    for (const config of configs) {
-      if (!config.verify_token) continue
+    let matched = false
+    if (config.verify_token) {
       try {
         if (decrypt(config.verify_token) === verifyToken) {
-          matchedConfig = config
-          break
+          matched = true
         }
       } catch {
-        // Malformed / wrong-key token row — skip it and keep checking.
+        // Malformed / wrong-key token
       }
+    } else {
+      // First-time setup: The user has no verify_token saved yet.
+      // Since the URL contains their accountId, we can trust
+      // this initial ping and lock in the token they chose in the Meta UI.
+      matched = true
+      void supabaseAdmin()
+        .from('whatsapp_config')
+        .update({ verify_token: encrypt(verifyToken) })
+        .eq('id', config.id)
+        .then(({ error }: { error: unknown }) => {
+          if (error) {
+            console.warn('[webhook] Failed to auto-save initial verify_token:', error)
+          }
+        })
     }
 
-    if (matchedConfig) {
+    if (matched) {
       // Fire-and-forget GCM upgrade. Safe to run on every subscribe
       // since it's a no-op once the column is already GCM.
-      if (isLegacyFormat(matchedConfig.verify_token)) {
+      if (config.verify_token && isLegacyFormat(config.verify_token)) {
         void supabaseAdmin()
           .from('whatsapp_config')
           .update({ verify_token: encrypt(verifyToken) })
-          .eq('id', matchedConfig.id)
+          .eq('id', config.id)
           .then(({ error }: { error: unknown }) => {
             if (error) {
               console.warn(
@@ -169,13 +183,34 @@ export async function GET(request: Request) {
 }
 
 // POST - Receive messages
-export async function POST(request: Request) {
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ accountId: string }> }
+) {
+  const { accountId } = await params
+  
+  // Fetch the meta_app_secret for this account
+  const { data: config } = await supabaseAdmin()
+    .from('whatsapp_config')
+    .select('meta_app_secret')
+    .eq('account_id', accountId)
+    .maybeSingle()
+    
+  let secret: string | null = null
+  if (config?.meta_app_secret) {
+    try {
+      secret = decrypt(config.meta_app_secret)
+    } catch (err) {
+      console.error('[webhook] Failed to decrypt meta_app_secret for account:', accountId)
+    }
+  }
+
   // Read raw body first so we can HMAC-verify the exact bytes Meta
   // signed. request.json() would re-encode and break the signature.
   const rawBody = await request.text()
   const signature = request.headers.get('x-hub-signature-256')
 
-  if (!verifyMetaWebhookSignature(rawBody, signature)) {
+  if (!verifyMetaWebhookSignature(rawBody, signature, secret)) {
     // 401 (not 200) — we want Meta's delivery dashboard to show failures
     // loudly if a misconfiguration causes signatures to stop matching,
     // rather than silently eating events.

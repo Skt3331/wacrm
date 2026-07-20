@@ -29,6 +29,7 @@ CREATE INDEX IF NOT EXISTS idx_tasks_contact ON tasks(contact_id);
 -- RLS for Tasks
 ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can read tasks in their account" ON public.tasks;
 CREATE POLICY "Users can read tasks in their account" 
   ON public.tasks FOR SELECT 
   USING (
@@ -39,6 +40,7 @@ CREATE POLICY "Users can read tasks in their account"
     )
   );
 
+DROP POLICY IF EXISTS "Users can insert tasks in their account" ON public.tasks;
 CREATE POLICY "Users can insert tasks in their account" 
   ON public.tasks FOR INSERT 
   WITH CHECK (
@@ -49,6 +51,7 @@ CREATE POLICY "Users can insert tasks in their account"
     )
   );
 
+DROP POLICY IF EXISTS "Users can update tasks in their account" ON public.tasks;
 CREATE POLICY "Users can update tasks in their account" 
   ON public.tasks FOR UPDATE 
   USING (
@@ -59,6 +62,7 @@ CREATE POLICY "Users can update tasks in their account"
     )
   );
 
+DROP POLICY IF EXISTS "Users can delete tasks in their account" ON public.tasks;
 CREATE POLICY "Users can delete tasks in their account" 
   ON public.tasks FOR DELETE 
   USING (

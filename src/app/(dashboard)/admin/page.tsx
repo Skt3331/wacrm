@@ -76,7 +76,7 @@ export default async function AdminDashboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {accounts?.map((acc: any) => (
+                    {accounts?.map((acc: { id: string; name: string; created_at: string; profiles?: { email: string }[]; has_lifetime_access?: boolean; }) => (
                       <tr key={acc.id} className="hover:bg-muted/30">
                         <td className="px-4 py-3">
                           <p className="font-medium">{acc.name}</p>
