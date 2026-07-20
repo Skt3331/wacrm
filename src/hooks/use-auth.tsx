@@ -35,6 +35,7 @@ interface Profile {
   beta_features: string[];
   account_id: string | null;
   account_role: AccountRole | null;
+  is_platform_admin: boolean;
 }
 
 interface AccountSummary {
@@ -138,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "id, full_name, email, avatar_url, role, beta_features, account_id, account_role",
+          "id, full_name, email, avatar_url, role, beta_features, account_id, account_role, is_platform_admin",
         )
         .eq("user_id", userId)
         .maybeSingle();
@@ -212,6 +213,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           beta_features: data.beta_features ?? [],
           account_id: data.account_id ?? null,
           account_role: accountRole,
+          is_platform_admin: data.is_platform_admin ?? false,
         });
         setAccount(accountRow);
       } else {
