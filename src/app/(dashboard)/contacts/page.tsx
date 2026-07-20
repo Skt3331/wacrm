@@ -380,7 +380,7 @@ export default function ContactsPage() {
               canAct={canEdit && !isOverLimit}
               gateReason={isOverLimit ? 'Upgrade plan to add more contacts' : "add or import contacts"}
               onClick={openAddForm}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground neon-glow transition-all hover:scale-105"
             >
               <Plus className="size-4" />
               {t('addContactBtn')}
@@ -535,7 +535,7 @@ export default function ContactsPage() {
       )}
 
       {/* Table */}
-      <div className="rounded-lg border border-border overflow-hidden">
+      <div className="rounded-lg border border-border overflow-hidden glass">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
@@ -595,11 +595,11 @@ export default function ContactsPage() {
               </TableRow>
             ) : (
               contacts.map((contact) => (
-                <TableRow
-                  key={contact.id}
-                  className="border-border hover:bg-muted/50 cursor-pointer"
-                  onClick={() => openDetail(contact.id)}
-                >
+                  <TableRow
+                    key={contact.id}
+                    className="border-border hover:bg-primary-soft/50 cursor-pointer transition-colors h-14"
+                    onClick={() => openDetail(contact.id)}
+                  >
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={selected.has(contact.id)}

@@ -81,7 +81,7 @@ export function Header({ onOpenSidebar }: HeaderProps) {
           className="flex items-center gap-2 rounded-md px-1 py-1 transition-colors hover:bg-muted/70 focus:bg-muted/70 focus:outline-none data-popup-open:bg-muted/70 sm:gap-3 sm:pl-1 sm:pr-3"
           aria-label={t("openAccountMenu")}
         >
-          <Avatar className="size-8">
+          <Avatar className="size-8 ring-2 ring-primary/20 ring-offset-2 ring-offset-background transition-all hover:ring-primary/40">
             {profile?.avatar_url ? (
               <AvatarImage
                 src={profile.avatar_url}
