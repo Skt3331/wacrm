@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { addContactTag, deleteContactTag } from '@/lib/contacts/tag-api';
 import { useAuth } from '@/hooks/use-auth';
+import { useTasks } from '@/hooks/use-tasks';
 import { formatCurrency } from '@/lib/currency';
 import { toast } from 'sonner';
 import type { Contact, Tag, ContactTag, ContactNote, CustomField, ContactCustomValue, Deal, MessageTemplate } from '@/types';
@@ -96,6 +97,12 @@ export function ContactDetailView({
   // Deals tab
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loadingDeals, setLoadingDeals] = useState(false);
+
+  // Tasks tab
+  const { tasks, loading: loadingTasks, fetchTasks, addTask, updateTask, deleteTask } = useTasks(contactId ?? undefined);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDue, setNewTaskDue] = useState('');
+  const [savingTask, setSavingTask] = useState(false);
 
   const fetchContact = useCallback(async () => {
     if (!contactId) return;
@@ -477,6 +484,12 @@ export function ContactDetailView({
                   {t('tabs.custom')}
                 </TabsTrigger>
                 <TabsTrigger
+                  value="tasks"
+                  className="data-active:bg-muted data-active:text-primary text-muted-foreground"
+                >
+                  Tasks
+                </TabsTrigger>
+                <TabsTrigger
                   value="deals"
                   className="data-active:bg-muted data-active:text-primary text-muted-foreground"
                 >
@@ -686,6 +699,82 @@ export function ContactDetailView({
                     </Button>
                   </div>
                 )}
+              </TabsContent>
+
+              {/* Tasks Tab */}
+              <TabsContent value="tasks" className="flex-1 flex flex-col min-h-0 px-4 py-3">
+                <div className="space-y-2 mb-3">
+                  <Input
+                    value={newTaskTitle}
+                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                    placeholder="Task title..."
+                    className="bg-muted border-border text-foreground text-sm"
+                  />
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="date"
+                      value={newTaskDue}
+                      onChange={(e) => setNewTaskDue(e.target.value)}
+                      className="bg-muted border-border text-foreground text-sm w-36"
+                    />
+                    <Button
+                      onClick={async () => {
+                        if (!newTaskTitle.trim()) return;
+                        setSavingTask(true);
+                        await addTask({ title: newTaskTitle.trim(), due_date: newTaskDue || undefined });
+                        setNewTaskTitle('');
+                        setNewTaskDue('');
+                        setSavingTask(false);
+                      }}
+                      disabled={!newTaskTitle.trim() || savingTask}
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground flex-1"
+                      size="sm"
+                    >
+                      {savingTask ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
+                      Add Task
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto space-y-2">
+                  {loadingTasks ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : tasks.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">No tasks yet.</p>
+                  ) : (
+                    tasks.map((task) => (
+                      <div
+                        key={task.id}
+                        className={`rounded-lg bg-muted/50 border border-border/50 p-3 flex items-start gap-3 group transition-opacity ${task.status === 'completed' ? 'opacity-50' : ''}`}
+                      >
+                        <button
+                          onClick={() => updateTask(task.id, { status: task.status === 'completed' ? 'pending' : 'completed' })}
+                          className={`mt-0.5 size-4 rounded border flex items-center justify-center shrink-0 transition-colors ${task.status === 'completed' ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground text-transparent hover:border-primary'}`}
+                        >
+                          <Check className="size-3" />
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm text-foreground ${task.status === 'completed' ? 'line-through' : ''}`}>
+                            {task.title}
+                          </p>
+                          {task.due_date && (
+                            <p className="text-xs text-amber-500 mt-1">
+                              Due: {new Date(task.due_date).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => deleteTask(task.id)}
+                          className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400 transition-all cursor-pointer shrink-0"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
               </TabsContent>
 
               {/* Deals Tab */}

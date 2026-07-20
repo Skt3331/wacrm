@@ -172,7 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .from("accounts")
             // default_currency added in migration 021; narrowed to the
             // USD fallback below for older schemas where it reads null.
-            .select("id, name, default_currency")
+            .select("id, name, default_currency, onboarding_completed")
             .eq("id", data.account_id)
             .maybeSingle();
           if (accountErr) {
